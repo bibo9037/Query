@@ -39,6 +39,7 @@ public class QueryController {
 		return queryManagerRes;
 	}
 
+	
 	@PostMapping(value = "/api/setQuery")
 	public QueryManagerRes setQuery(@RequestBody QueryReq req) {
 		// 判斷問卷題目是否為空
@@ -49,12 +50,48 @@ public class QueryController {
 		QueryAdd queryAdd = queryService.setQuery(req.getCaption(), req.getQuestion(), req.getOptions());
 
 		if (queryAdd == null) {
-			return new QueryManagerRes(QueryRtnCode.EXISTED.getMessage());
+			return new QueryManagerRes(QueryRtnCode.DELETE_NOT_EXIST.getMessage());
 		}
 
 		QueryManagerRes queryManagerRes = new QueryManagerRes(queryAdd, QueryRtnCode.SUCCESSFUL.getMessage());
 		return queryManagerRes;
 	}
+	
+	@PostMapping(value = "/api/reviseCaption")
+	public QueryManagerRes reviseCaption(@RequestBody QueryReq req) {
+		
+		if(!StringUtils.hasText(req.getCaption())) {
+			return new QueryManagerRes(QueryRtnCode.CAPTION_EMPTY.getMessage());
+		}
+		
+		if(!StringUtils.hasText(req.getCaption()) && !StringUtils.hasText(req.getContent())) {
+			return new QueryManagerRes(QueryRtnCode.CANCEL_REVISE.getMessage());
+		}
+		
+		QueryManager queryManager = queryService.reviseCaption(req.getCaption(), req.getNewCaption(), req.getContent(), req.getNewContent(), req.getQuestion());
+		if(queryManager == null ) {
+			return new QueryManagerRes(QueryRtnCode.DELETE_NOT_EXIST.getMessage());
+		}
+		
+		QueryManagerRes queryManagerRes = new QueryManagerRes(queryManager,QueryRtnCode.SUCCESSFUL.getMessage());
+		return queryManagerRes;
+	}
+	
+	@PostMapping(value = "/api/reviseQuestions")
+	public QueryManagerRes reviseQuestions(@RequestBody QueryReq req) {
+		if(!StringUtils.hasText(req.getCaption()) || !StringUtils.hasText(req.getQuestion())) {
+			return new QueryManagerRes(QueryRtnCode.CAPTION_EMPTY.getMessage());
+		}
+		
+		QueryAdd queryAdd = queryService.reviseQuestions(req.getCaption(), req.getQuestion(), req.getNewQuestion(), req.getOptions(), req.getNewOptions());
+		if(queryAdd == null) {
+			return new QueryManagerRes(QueryRtnCode.DELETE_NOT_EXIST.getMessage());
+		}
+		
+		QueryManagerRes queryManagerRes = new QueryManagerRes(queryAdd,QueryRtnCode.SUCCESSFUL.getMessage());
+		return queryManagerRes;
+	}
+	
 	
 	@PostMapping(value = "/api/deleteQuery")
 	public QueryManagerRes deleteQuery(@RequestBody QueryReq req) {

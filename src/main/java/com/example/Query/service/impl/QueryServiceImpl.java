@@ -28,7 +28,7 @@ public class QueryServiceImpl implements QueryService {
 	// 建立新的問卷
 	@Override
 	public QueryManager creatNewQuery(String caption, String content) {
-		if(queryManagerDao.existsById(caption)) {
+		if (queryManagerDao.existsById(caption)) {
 			return null;
 		}
 		QueryManager queryManager = new QueryManager(caption, content);
@@ -40,18 +40,91 @@ public class QueryServiceImpl implements QueryService {
 	public QueryAdd setQuery(String caption, String question, String options) {
 		QueryId queryId = new QueryId(caption, question);
 
+		if (queryManagerDao.findByCaption(caption).isEmpty()) {
+			return null;
+		}
+
 		if (queryAddDao.existsById(queryId)) {
 			return null;
 		}
 
 		QueryAdd queryAdd = new QueryAdd(caption, question, options);
 		queryAddDao.save(queryAdd);
-		Optional<QueryAdd> queryAddList = queryAddDao.findById(queryId);
-		queryAddList.get().setCaption(caption);
-		queryAddDao.save(queryAddList.get());
 		return queryAdd;
 	}
+	
+	// 編輯問卷名稱
+	@Override
+	public QueryManager reviseCaption(String caption, String newCaption, String content, String newContent, String question) {
+		Optional<QueryManager> queryManagerOp = queryManagerDao.findById(caption);
+		if(!queryManagerOp.isPresent()) {
+			return null;
+		}
+		QueryManager queryManager = queryManagerOp.get();
+		queryManagerDao.delete(queryManager);
+		
+		if(StringUtils.hasText(newContent)) {
+			queryManager.setContent(newContent);
+		}
+		
+		if(StringUtils.hasText(newCaption)) {
+			queryManager.setCaption(newCaption);
+			List<QueryAdd> queryAddList = queryAddDao.findByCaption(caption);
+			queryAddDao.deleteAll(queryAddList);
+			
+			for(QueryAdd queryAdd : queryAddList) {
+				queryAdd.setCaption(newCaption);
+			}
+			queryAddDao.saveAll(queryAddList);
+		}
+		queryManagerDao.save(queryManager);
+		return queryManager;
+	}
 
+	// 編輯問卷問題跟選項
+	@Override
+	public QueryAdd reviseQuestions(String caption, String question, String newQuestion, String options, String newOptions) {
+		QueryId queryId = new QueryId(caption, question);
+		Optional<QueryAdd> queryAddOp = queryAddDao.findById(queryId);
+		
+		if(!queryAddOp.isPresent()) {
+			return null;
+		}
+		
+		QueryAdd queryAdd = queryAddOp.get();
+		queryAddDao.delete(queryAdd);
+		
+		if(StringUtils.hasText(newQuestion)) {
+			queryAdd.setQuestion(newQuestion);
+		}
+		
+		if(StringUtils.hasText(newOptions)) {
+			queryAdd.setOptions(newOptions);
+		}
+		return queryAddDao.save(queryAdd);
+	}
+
+	// 刪除問卷
+	@Override
+	public QueryManager deleteQuery(String caption, String question) {
+		Optional<QueryManager> queryManagerOp = queryManagerDao.findById(caption);
+
+		if (!queryManagerOp.isPresent()) {
+			return null;
+		}
+
+		QueryManager queryManager = queryManagerOp.get();
+		queryManagerDao.delete(queryManager);
+
+		if (StringUtils.hasText(caption)) {
+			queryManager.setCaption(caption);
+			List<QueryAdd> queryAddList = queryAddDao.findByCaption(caption);
+			queryAddDao.deleteAll(queryAddList);
+		}
+		queryManagerDao.delete(queryManager);
+		return queryManager;
+	}
+	
 	// 已作答問卷排序(新到舊)
 	@Override
 	public void findByFinishTimeOrderByCaptionDesc(String caption, Date finishTime) {
@@ -60,30 +133,10 @@ public class QueryServiceImpl implements QueryService {
 
 	// 已作答問卷選項統計
 	@Override
-	public void optionsCount(String caption, String question, String options) {
-
+	public void countByOptions(String caption, String question, String options) {
+		
 	}
 
-	// 刪除問卷
-	@Override
-	public QueryManager deleteQuery(String caption, String question) {
-		Optional<QueryManager> queryManagerOp = queryManagerDao.findById(caption);
-		
-		if (!queryManagerOp.isPresent()) {
-			return null;
-		}
-		
-		QueryManager queryManager = queryManagerOp.get();
-		queryManagerDao.delete(queryManager);
-		
-		if(StringUtils.hasText(caption)) {
-			queryManager.setCaption(caption);
-			List<QueryAdd> queryAddList = queryAddDao.findByCaption(caption);
-			queryAddDao.deleteAll(queryAddList);
-		}
-		queryManagerDao.delete(queryManager);
-		return queryManager;
-	}
 
 	// 用名稱搜尋問卷
 	@Override

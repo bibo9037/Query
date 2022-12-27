@@ -28,7 +28,19 @@ public class QueryReq {
 	private String options; // 問卷選項
 	
 	@JsonProperty("user_name")
-	private String userName;	//填寫者名稱
+	private String userName;	// 填寫者名稱
+	
+	@JsonProperty("new_caption")
+	private String newCaption;	// 編輯的新問卷名稱
+	
+	@JsonProperty("new_content")
+	private String newContent; // 描述內容
+	
+	@JsonProperty("new_question")
+	private String newQuestion;	// 編輯的新問卷問題 
+	
+	@JsonProperty("new_options")
+	private String newOptions;	// 編輯的新問卷選項
 	
 	public QueryReq() {
 		
@@ -96,6 +108,38 @@ public class QueryReq {
 
 	public void setUserName(String userName) {
 		this.userName = userName;
+	}
+
+	public String getNewCaption() {
+		return newCaption;
+	}
+
+	public void setNewCaption(String newCaption) {
+		this.newCaption = newCaption;
+	}
+
+	public String getNewQuestion() {
+		return newQuestion;
+	}
+
+	public void setNewQuestion(String newQuestion) {
+		this.newQuestion = newQuestion;
+	}
+
+	public String getNewOptions() {
+		return newOptions;
+	}
+
+	public void setNewOptions(String newOptions) {
+		this.newOptions = newOptions;
+	}
+
+	public String getNewContent() {
+		return newContent;
+	}
+
+	public void setNewContent(String newContent) {
+		this.newContent = newContent;
 	}
 	
 }
