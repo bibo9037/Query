@@ -145,8 +145,8 @@ public class QueryServiceImpl implements QueryService {
 	}
 
 	@Override
-	public List<QueryAdd> showAllQuery() {
-		return queryAddDao.findAll();
+	public List<QueryManager> showAllQuery() {
+		return queryManagerDao.findAll();
 	}
 
 	// 儲存作答者資料

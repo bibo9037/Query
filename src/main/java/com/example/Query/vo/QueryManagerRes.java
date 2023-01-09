@@ -118,7 +118,7 @@ public class QueryManagerRes {
 	public void setQueryManagerList(List<QueryManager> queryManagerList) {
 		this.queryManagerList = queryManagerList;
 	}
-
+	
 	public List<QueryAdd> getQueryAddList() {
 		return queryAddList;
 	}

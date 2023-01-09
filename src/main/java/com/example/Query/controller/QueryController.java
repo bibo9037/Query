@@ -117,11 +117,11 @@ public class QueryController {
 	
 	@PostMapping(value = "/api/showAllQuery")
 	public QueryManagerRes showAllQuery(){
-		List<QueryAdd> queryAddList = queryService.showAllQuery();
+		List<QueryManager> queryManagerList = queryService.showAllQuery();
 
 		QueryManagerRes queryManagerRes = new QueryManagerRes();
 		queryManagerRes.setMessage(QueryRtnCode.SUCCESSFUL.getMessage());
-		queryManagerRes.setQueryAddList(queryAddList);
+		queryManagerRes.setQueryManagerList(queryManagerList);
 		return queryManagerRes;
 	}
 

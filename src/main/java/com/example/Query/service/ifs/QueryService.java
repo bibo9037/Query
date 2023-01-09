@@ -27,7 +27,7 @@ public interface QueryService {
 	public QueryManager deleteQuery(String caption, String question);
 	
 	// 顯示所有問卷
-	public List<QueryAdd> showAllQuery();
+	public List<QueryManager> showAllQuery();
 	
 	// 建立作答者資料
 	public QueryDeposit creatUserInfo(String caption, String question, String ans, String name, String phone, String mail, int age);
