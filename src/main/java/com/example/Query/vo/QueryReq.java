@@ -64,6 +64,12 @@ public class QueryReq {
 	@JsonProperty("size")
 	private int size;
 	
+	@JsonProperty("selectedOption")
+	private boolean selectedOption; // ³æ½Æ¿ï
+	
+	@JsonProperty("required")
+	private boolean required;	// ¥²¶ñ
+	
 	public QueryReq() {
 
 	}
@@ -223,6 +229,22 @@ public class QueryReq {
 
 	public void setSize(int size) {
 		this.size = size;
+	}
+	
+	public boolean isSelectedOption() {
+		return selectedOption;
+	}
+
+	public void setSelectedOption(boolean selectedOption) {
+		this.selectedOption = selectedOption;
+	}
+
+	public boolean isRequired() {
+		return required;
+	}
+
+	public void setRequired(boolean required) {
+		this.required = required;
 	}
 
 }

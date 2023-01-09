@@ -4,8 +4,11 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,7 @@ import com.example.Query.repository.QueryAddDao;
 import com.example.Query.repository.QueryDepositDao;
 import com.example.Query.repository.QueryManagerDao;
 import com.example.Query.service.ifs.QueryService;
+import com.example.Query.vo.QueryCount;
 
 @Service
 public class QueryServiceImpl implements QueryService {
@@ -49,7 +53,7 @@ public class QueryServiceImpl implements QueryService {
 
 	// 設定新建立問卷的題目
 	@Override
-	public QueryAdd setQuery(String caption, String question, String opt) {
+	public QueryAdd creatQuestion(String caption, String question, String opt, boolean selectedOption, boolean required) {
 		QueryId queryId = new QueryId(caption, question);
 
 		if (queryManagerDao.findByCaption(caption).isEmpty()) {
@@ -60,7 +64,7 @@ public class QueryServiceImpl implements QueryService {
 			return null;
 		}
 
-		QueryAdd queryAdd = new QueryAdd(caption, question, opt);
+		QueryAdd queryAdd = new QueryAdd(caption, question, opt, selectedOption, required);
 		queryAddDao.save(queryAdd);
 		return queryAdd;
 	}
@@ -181,15 +185,38 @@ public class QueryServiceImpl implements QueryService {
 
 	// 已作答問卷選項統計
 	@Override
-	public QueryDeposit countByOpt(int id, String caption, String question, String ans) {
-//		List<QueryDeposit> queryDepositList = queryDepositDao.findByCaptionAndQuestion("caption", "question");
-//		double size = (double) queryDepositList.size();
-//
-//		for (QueryDeposit queryDeposit : queryDepositList) {
-//			int freq = Collections.frequency(queryDepositList, queryDeposit);
-//		}
+	public List<QueryCount> countByAns(String question) {
+		List<QueryDeposit> queryDepositList = queryDepositDao.findAllByQuestion(question);
+		
+		Map<String, Integer> count = new HashMap<>();
+		
+		List<String> questionList = new ArrayList<>();
+		
+		List<QueryCount> queryCountList = new ArrayList<>();
+		
+		int totle = 0;
+		
+		for( QueryDeposit queryDeposit : queryDepositList) {
+			questionList.add(queryDeposit.getAns());
+		}
 
-		return null;
+		for(String item : questionList) {
+			count.put(item, count.getOrDefault(item, 0) +1);
+			totle++;
+		}
+		
+		for(Map.Entry<String, Integer> entry : count.entrySet()) {
+			
+			String answer = entry.getKey();
+			int acount = entry.getValue();
+			
+			int percentage = (int) (acount * 100.0 / totle);
+			
+			QueryCount queryCount = new QueryCount(answer, totle, acount, percentage);
+			queryCountList.add(queryCount);
+		}
+		
+		return queryCountList;
 	}
 
 	// 問卷名稱的模糊搜尋

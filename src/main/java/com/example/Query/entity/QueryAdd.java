@@ -1,7 +1,5 @@
 package com.example.Query.entity;
 
-import java.util.Date;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -23,21 +21,23 @@ public class QueryAdd {
 
 	@Column(name = "opt")
 	private String opt; // 問卷選項
-
-	@Column(name = "start_date")
-	private Date startDate; // 開始時間
-
-	@Column(name = "end_date")
-	private Date endDate; // 結束時間
+	
+	@Column(name = "selected_option")
+	private boolean selectedOption; // 單複選
+	
+	@Column(name = "required")
+	private boolean required;	// 必填
 
 	public QueryAdd() {
 
 	}
-	
-	public QueryAdd(String caption, String question, String opt) {
+
+	public QueryAdd(String caption, String question, String opt, boolean selectedOption, boolean required) {
 		this.caption = caption;
 		this.question = question;
 		this.opt = opt;
+		this.selectedOption = selectedOption;
+		this.required = required;
 	}
 
 	public String getCaption() {
@@ -64,20 +64,20 @@ public class QueryAdd {
 		this.opt = opt;
 	}
 
-	public Date getStartDate() {
-		return startDate;
+	public boolean isSelectedOption() {
+		return selectedOption;
 	}
 
-	public void setStartDate(Date startDate) {
-		this.startDate = startDate;
+	public void setSelectedOption(boolean selectedOption) {
+		this.selectedOption = selectedOption;
 	}
 
-	public Date getEndDate() {
-		return endDate;
+	public boolean isRequired() {
+		return required;
 	}
 
-	public void setEndDate(Date endDate) {
-		this.endDate = endDate;
+	public void setRequired(boolean required) {
+		this.required = required;
 	}
 
 }

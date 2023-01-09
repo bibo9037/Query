@@ -7,6 +7,7 @@ import java.util.List;
 import com.example.Query.entity.QueryAdd;
 import com.example.Query.entity.QueryDeposit;
 import com.example.Query.entity.QueryManager;
+import com.example.Query.vo.QueryCount;
 
 public interface QueryService {
 	
@@ -14,7 +15,7 @@ public interface QueryService {
 	public QueryManager creatNewQuery(String caption, String content, Date startDate, Date endDate); 
 	
 	// 設定新建立問卷題目
-	public QueryAdd setQuery(String caption, String question, String opt);
+	public QueryAdd creatQuestion(String caption, String question, String opt, boolean selectedOption, boolean required);
 
 	// 編輯問卷名稱
 	public QueryManager reviseCaption(String caption, String newCaption, String content, String newContent, String question);
@@ -38,8 +39,9 @@ public interface QueryService {
 	public List<QueryDeposit> getQueryPage(int page, int size);
 
 	// 已作答問卷選項統計
-	public QueryDeposit countByOpt(int id, String caption, String question, String ans);
+	public List<QueryCount> countByAns(String question);
 
 	// 問卷的模糊搜尋
 	public List<QueryManager> findByCaptionContaining(String caption, Date startDate, Date endDate) throws ParseException;
+
 }

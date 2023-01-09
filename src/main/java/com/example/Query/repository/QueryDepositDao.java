@@ -14,6 +14,8 @@ public interface QueryDepositDao extends JpaRepository<QueryDeposit, Integer>{
 	
 	public List<QueryDeposit> findByCaption(String caption);
 	
+	public List<QueryDeposit> findAllByQuestion(String question);
+	
 	@Query(" select qd from QueryDeposit qd where caption = :caption and question = :question ")
 	public List<QueryDeposit> findByCaptionAndQuestion(
 			@Param("caption") String caption,

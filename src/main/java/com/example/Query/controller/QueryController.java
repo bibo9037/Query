@@ -15,6 +15,7 @@ import com.example.Query.entity.QueryAdd;
 import com.example.Query.entity.QueryDeposit;
 import com.example.Query.entity.QueryManager;
 import com.example.Query.service.ifs.QueryService;
+import com.example.Query.vo.QueryCount;
 import com.example.Query.vo.QueryManagerRes;
 import com.example.Query.vo.QueryReq;
 
@@ -33,7 +34,7 @@ public class QueryController {
 			return new QueryManagerRes(QueryRtnCode.CAPTION_EMPTY.getMessage());
 		}
 
-		QueryManager queryManager = queryService.creatNewQuery(req.getCaption(), req.getContent());
+		QueryManager queryManager = queryService.creatNewQuery(req.getCaption(), req.getContent(), req.getStartDate(), req.getEndDate());
 
 		if (queryManager == null) {
 			return new QueryManagerRes(QueryRtnCode.EXISTED.getMessage());
@@ -43,14 +44,14 @@ public class QueryController {
 		return queryManagerRes;
 	}
 
-	@PostMapping(value = "/api/setQuery")
-	public QueryManagerRes setQuery(@RequestBody QueryReq req) {
+	@PostMapping(value = "/api/creatQuestion")
+	public QueryManagerRes creatQuestion(@RequestBody QueryReq req) {
 		// 判斷問卷題目是否為空
 		if (!StringUtils.hasText(req.getCaption())) {
 			return new QueryManagerRes(QueryRtnCode.CAPTION_EMPTY.getMessage());
 		}
 
-		QueryAdd queryAdd = queryService.setQuery(req.getCaption(), req.getQuestion(), req.getOpt());
+		QueryAdd queryAdd = queryService.creatQuestion(req.getCaption(), req.getQuestion(), req.getOpt(), req.isSelectedOption(), req.isRequired());
 
 		if (queryAdd == null) {
 			return new QueryManagerRes(QueryRtnCode.DELETE_NOT_EXIST.getMessage());
@@ -115,8 +116,13 @@ public class QueryController {
 	}
 	
 	@PostMapping(value = "/api/showAllQuery")
-	public List<QueryAdd> showAllQuery(){
-		return queryService.showAllQuery();
+	public QueryManagerRes showAllQuery(){
+		List<QueryAdd> queryAddList = queryService.showAllQuery();
+
+		QueryManagerRes queryManagerRes = new QueryManagerRes();
+		queryManagerRes.setMessage(QueryRtnCode.SUCCESSFUL.getMessage());
+		queryManagerRes.setQueryAddList(queryAddList);
+		return queryManagerRes;
 	}
 
 	@PostMapping(value = "/api/creatUserInfo")
@@ -137,8 +143,13 @@ public class QueryController {
 	}
 	
 	@PostMapping(value = "/api/showAllUserInfo")
-	public List<QueryDeposit> showAllUserInfo(){
-		return queryService.showAllUserInfo();
+	public QueryManagerRes showAllUserInfo(){
+		List<QueryDeposit> queryDepositList = queryService.showAllUserInfo();
+		
+		QueryManagerRes queryManagerRes = new QueryManagerRes();
+		queryManagerRes.setMessage(QueryRtnCode.SUCCESSFUL.getMessage());
+		queryManagerRes.setQueryDepositList(queryDepositList);
+		return queryManagerRes;
 	}
 
 	@PostMapping(value = "/api/getQueryPage")
@@ -154,14 +165,26 @@ public class QueryController {
 
 		return queryManagerRes;
 	}
+	
+	@PostMapping(value = "/api/countByAns")
+	public QueryManagerRes countByAns(@RequestBody QueryReq req){
+		 List<QueryCount> queryCountList = queryService.countByAns(req.getQuestion());
+				
+		QueryManagerRes queryManagerRes = new QueryManagerRes();
+		queryManagerRes.setMessage(QueryRtnCode.SEARCH_SUCCESSFUL.getMessage());
+		queryManagerRes.setQueryCountList(queryCountList);
+		
+		return queryManagerRes;
+	}
+	
 
 	
 	@PostMapping(value = "/api/findByCaptionContaining")
 	public QueryManagerRes findByCaptionContaining(@RequestBody QueryReq req) throws ParseException {
 		List<QueryManager> queryManagerList = queryService.findByCaptionContaining(req.getCaption(), req.getStartDate(), req.getEndDate());
 
-		if (queryManagerList == null) {
-			return new QueryManagerRes(QueryRtnCode.SEARCH_EXIST.getMessage());
+		if (queryManagerList.isEmpty()) {
+			return new QueryManagerRes(QueryRtnCode.SEARCH_NOT_EXIST.getMessage());
 		}
 
 		QueryManagerRes queryManagerRes = new QueryManagerRes(QueryRtnCode.SEARCH_SUCCESSFUL.getMessage(), queryManagerList);

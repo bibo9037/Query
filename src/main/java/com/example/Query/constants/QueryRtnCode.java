@@ -13,7 +13,7 @@ public enum QueryRtnCode {
 	FAILD("400","請輸入完整資料"),
 	SEARCH_SUCCESSFUL("200","資料查詢成功"),
 	SEARCH_FAILD("400","查詢失敗，請確認分頁或顯示筆數是否超過10筆"),
-	SEARCH_EXIST("400","查詢失敗，沒有符合的問卷"),
+	SEARCH_NOT_EXIST("400","查詢失敗，沒有符合的問卷"),
 	SAVE_SUCCESSFUL("200", "資料儲存成功"),
 	ERROR("400","還有題目未答，請作答")
 	;

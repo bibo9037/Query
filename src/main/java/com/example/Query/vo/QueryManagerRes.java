@@ -26,6 +26,10 @@ public class QueryManagerRes {
 	
 	private List<QueryManager> queryManagerList;
 	
+	private List<QueryAdd> queryAddList;
+	
+	private List<QueryCount> queryCountList;
+	
 	public QueryManagerRes() {
 
 	}
@@ -113,6 +117,22 @@ public class QueryManagerRes {
 
 	public void setQueryManagerList(List<QueryManager> queryManagerList) {
 		this.queryManagerList = queryManagerList;
+	}
+
+	public List<QueryAdd> getQueryAddList() {
+		return queryAddList;
+	}
+
+	public void setQueryAddList(List<QueryAdd> queryAddList) {
+		this.queryAddList = queryAddList;
+	}
+
+	public List<QueryCount> getQueryCountList() {
+		return queryCountList;
+	}
+
+	public void setQueryCountList(List<QueryCount> queryCountList) {
+		this.queryCountList = queryCountList;
 	}
 
 }
