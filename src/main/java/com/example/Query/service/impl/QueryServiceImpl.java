@@ -1,18 +1,26 @@
 package com.example.Query.service.impl;
 
-import java.util.ArrayList;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.example.Query.entity.QueryAdd;
+import com.example.Query.entity.QueryDeposit;
 import com.example.Query.entity.QueryId;
 import com.example.Query.entity.QueryManager;
 import com.example.Query.repository.QueryAddDao;
+import com.example.Query.repository.QueryDepositDao;
 import com.example.Query.repository.QueryManagerDao;
 import com.example.Query.service.ifs.QueryService;
 
@@ -25,19 +33,23 @@ public class QueryServiceImpl implements QueryService {
 	@Autowired
 	private QueryAddDao queryAddDao;
 
+	@Autowired
+	private QueryDepositDao queryDepositDao;
+
 	// 建立新的問卷
 	@Override
-	public QueryManager creatNewQuery(String caption, String content) {
+	public QueryManager creatNewQuery(String caption, String content, Date startDate, Date endDate) {
 		if (queryManagerDao.existsById(caption)) {
 			return null;
 		}
-		QueryManager queryManager = new QueryManager(caption, content);
+		QueryManager queryManager = new QueryManager(caption, content, startDate, endDate);
+		startDate = new Date();
 		return queryManagerDao.save(queryManager);
 	}
 
 	// 設定新建立問卷的題目
 	@Override
-	public QueryAdd setQuery(String caption, String question, String options) {
+	public QueryAdd setQuery(String caption, String question, String opt) {
 		QueryId queryId = new QueryId(caption, question);
 
 		if (queryManagerDao.findByCaption(caption).isEmpty()) {
@@ -48,31 +60,32 @@ public class QueryServiceImpl implements QueryService {
 			return null;
 		}
 
-		QueryAdd queryAdd = new QueryAdd(caption, question, options);
+		QueryAdd queryAdd = new QueryAdd(caption, question, opt);
 		queryAddDao.save(queryAdd);
 		return queryAdd;
 	}
-	
+
 	// 編輯問卷名稱
 	@Override
-	public QueryManager reviseCaption(String caption, String newCaption, String content, String newContent, String question) {
+	public QueryManager reviseCaption(String caption, String newCaption, String content, String newContent,
+			String question) {
 		Optional<QueryManager> queryManagerOp = queryManagerDao.findById(caption);
-		if(!queryManagerOp.isPresent()) {
+		if (!queryManagerOp.isPresent()) {
 			return null;
 		}
 		QueryManager queryManager = queryManagerOp.get();
 		queryManagerDao.delete(queryManager);
-		
-		if(StringUtils.hasText(newContent)) {
+
+		if (StringUtils.hasText(newContent)) {
 			queryManager.setContent(newContent);
 		}
-		
-		if(StringUtils.hasText(newCaption)) {
+
+		if (StringUtils.hasText(newCaption)) {
 			queryManager.setCaption(newCaption);
 			List<QueryAdd> queryAddList = queryAddDao.findByCaption(caption);
 			queryAddDao.deleteAll(queryAddList);
-			
-			for(QueryAdd queryAdd : queryAddList) {
+
+			for (QueryAdd queryAdd : queryAddList) {
 				queryAdd.setCaption(newCaption);
 			}
 			queryAddDao.saveAll(queryAddList);
@@ -83,28 +96,28 @@ public class QueryServiceImpl implements QueryService {
 
 	// 編輯問卷問題跟選項
 	@Override
-	public QueryAdd reviseQuestions(String caption, String question, String newQuestion, String options, String newOptions) {
+	public QueryAdd reviseQuestions(String caption, String question, String newQuestion, String opt, String newOpt) {
 		QueryId queryId = new QueryId(caption, question);
 		Optional<QueryAdd> queryAddOp = queryAddDao.findById(queryId);
-		
-		if(!queryAddOp.isPresent()) {
+
+		if (!queryAddOp.isPresent()) {
 			return null;
 		}
-		
+
 		QueryAdd queryAdd = queryAddOp.get();
 		queryAddDao.delete(queryAdd);
-		
-		if(StringUtils.hasText(newQuestion)) {
+
+		if (StringUtils.hasText(newQuestion)) {
 			queryAdd.setQuestion(newQuestion);
 		}
-		
-		if(StringUtils.hasText(newOptions)) {
-			queryAdd.setOptions(newOptions);
+
+		if (StringUtils.hasText(newOpt)) {
+			queryAdd.setOpt(newOpt);
 		}
 		return queryAddDao.save(queryAdd);
 	}
 
-	// 刪除問卷
+	// 刪除問卷(包含作答者資料一併刪除)
 	@Override
 	public QueryManager deleteQuery(String caption, String question) {
 		Optional<QueryManager> queryManagerOp = queryManagerDao.findById(caption);
@@ -119,40 +132,119 @@ public class QueryServiceImpl implements QueryService {
 		if (StringUtils.hasText(caption)) {
 			queryManager.setCaption(caption);
 			List<QueryAdd> queryAddList = queryAddDao.findByCaption(caption);
+			List<QueryDeposit> queryDepositList = queryDepositDao.findByCaption(caption);
 			queryAddDao.deleteAll(queryAddList);
+			queryDepositDao.deleteAll(queryDepositList);
 		}
 		queryManagerDao.delete(queryManager);
 		return queryManager;
 	}
-	
-	// 已作答問卷排序(新到舊)
-	@Override
-	public void findByFinishTimeOrderByCaptionDesc(String caption, Date finishTime) {
 
+	@Override
+	public List<QueryAdd> showAllQuery() {
+		return queryAddDao.findAll();
+	}
+
+	// 儲存作答者資料
+	@Override
+	public QueryDeposit creatUserInfo(String caption, String question, String ans, String name, String phone,
+			String mail, int age) {
+
+		if (ans.isEmpty()) {
+			return null;
+		}
+
+		QueryDeposit queryDeposit = new QueryDeposit(caption, question, ans, name, phone, mail, age);
+		queryDeposit.setFinishTime(LocalDateTime.now());
+
+		return queryDepositDao.save(queryDeposit);
+	}
+	
+	@Override
+	public List<QueryDeposit> showAllUserInfo() {
+		return queryDepositDao.findAll();
+	}
+
+	// 分頁查詢(由新到舊排序)
+	public List<QueryDeposit> getQueryPage(int page, int size) {
+		Page<QueryDeposit> pageResult = queryDepositDao.findAll(PageRequest.of(page, // 查詢的頁數，從0起算
+				size, // 查詢的每頁筆數
+				Sort.by("finishTime").descending())); // 依CREATE_TIME欄位降冪排序
+
+		List<QueryDeposit> queryDepositList = pageResult.getContent();
+
+		if (queryDepositList.size() < page || size > 10) {
+			return null;
+		}
+		return queryDepositList;
 	}
 
 	// 已作答問卷選項統計
 	@Override
-	public void countByOptions(String caption, String question, String options) {
-		
-	}
-
-
-	// 用名稱搜尋問卷
-	@Override
-	public List<QueryManager> findQueryByName(String caption) {
-		List<QueryManager> queryManagerResList = new ArrayList<>();
-		List<QueryManager> queryManagerList = queryManagerDao.findByCaption(caption);
-
-		if (queryManagerList.isEmpty()) {
-			return null;
-		}
-
-		for (QueryManager queryManager : queryManagerList) {
-			queryManagerResList.add(queryManager);
-		}
+	public QueryDeposit countByOpt(int id, String caption, String question, String ans) {
+//		List<QueryDeposit> queryDepositList = queryDepositDao.findByCaptionAndQuestion("caption", "question");
+//		double size = (double) queryDepositList.size();
+//
+//		for (QueryDeposit queryDeposit : queryDepositList) {
+//			int freq = Collections.frequency(queryDepositList, queryDeposit);
+//		}
 
 		return null;
 	}
+
+	// 問卷名稱的模糊搜尋
+	@Override
+	public List<QueryManager> findByCaptionContaining(String caption, Date startDate, Date endDate)
+			throws ParseException {
+
+		// 不輸入任何值，全部顯示
+		if (!StringUtils.hasText(caption) && startDate == null && endDate == null) {
+			return queryManagerDao.findAll();
+		}
+
+		// 輸入所有值，全部顯示
+		else if (StringUtils.hasText(caption) && startDate != null && endDate != null) {
+			return queryManagerDao.findByCaptionContainingAndStartDateBetween(caption, startDate, endDate);
+		}
+
+		// 問卷+開始
+		else if (StringUtils.hasText(caption) && startDate != null && endDate == null) {
+			DateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
+			Date end = dateFormat1.parse("2999-12-25");
+			return queryManagerDao.findByCaptionContainingAndStartDateBetween(caption, startDate, end);
+		}
+
+		// 問卷+結束
+		else if (StringUtils.hasText(caption) && startDate == null && endDate != null) {
+			DateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
+			Date start = dateFormat1.parse("1911-01-01");
+			return queryManagerDao.findByCaptionContainingAndStartDateBetween(caption, start, endDate);
+		}
+
+		// 開始+結束
+		else if (!StringUtils.hasText(caption) && startDate != null && endDate != null) {
+			return queryManagerDao.findByStartDateGreaterThanEqualAndEndDateLessThanEqual(startDate, endDate);
+		}
+
+		// 結束時間
+		else if (!StringUtils.hasText(caption) && startDate == null && endDate != null) {
+			return queryManagerDao.findByEndDateLessThanEqual(endDate);
+		}
+
+		// 開始時間
+		else if (!StringUtils.hasText(caption) && startDate != null && endDate == null) {
+			return queryManagerDao.findByStartDateGreaterThanEqual(startDate);
+		}
+
+		// 問卷名稱
+		else if (StringUtils.hasText(caption) && startDate == null && endDate == null) {
+			return queryManagerDao.findByCaptionContaining(caption);
+		}
+
+//		return queryManagerDao.findByCaptionContainingAndStartDateBetween(caption, startDate, endDate);
+		return null;
+	}
+
+
 
 }

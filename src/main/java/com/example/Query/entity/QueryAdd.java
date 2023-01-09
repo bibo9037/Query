@@ -21,8 +21,8 @@ public class QueryAdd {
 	@Column(name = "question")
 	private String question; // 問卷題目
 
-	@Column(name = "options")
-	private String options; // 問卷選項
+	@Column(name = "opt")
+	private String opt; // 問卷選項
 
 	@Column(name = "start_date")
 	private Date startDate; // 開始時間
@@ -34,10 +34,10 @@ public class QueryAdd {
 
 	}
 	
-	public QueryAdd(String caption, String question, String options) {
+	public QueryAdd(String caption, String question, String opt) {
 		this.caption = caption;
 		this.question = question;
-		this.options = options;
+		this.opt = opt;
 	}
 
 	public String getCaption() {
@@ -56,12 +56,12 @@ public class QueryAdd {
 		this.question = question;
 	}
 
-	public String getOptions() {
-		return options;
+	public String getOpt() {
+		return opt;
 	}
 
-	public void setOptions(String options) {
-		this.options = options;
+	public void setOpt(String opt) {
+		this.opt = opt;
 	}
 
 	public Date getStartDate() {
@@ -79,5 +79,5 @@ public class QueryAdd {
 	public void setEndDate(Date endDate) {
 		this.endDate = endDate;
 	}
-	
+
 }

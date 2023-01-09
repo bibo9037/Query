@@ -22,8 +22,22 @@ public class QueryManagerRes {
 
 	private List<QueryManagerRes> queryManagerResList;
 	
+	private List<QueryDeposit> queryDepositList;
+	
+	private List<QueryManager> queryManagerList;
+	
 	public QueryManagerRes() {
 
+	}
+
+	public QueryManagerRes(List<QueryDeposit> queryDepositList, String message) {
+		this.queryDepositList = queryDepositList;
+		this.message = message;
+	}
+
+	public QueryManagerRes(String message, List<QueryManager> queryManagerList) {
+		this.message = message;
+		this.queryManagerList = queryManagerList;
 	}
 
 	public QueryManagerRes(String message) {
@@ -37,6 +51,11 @@ public class QueryManagerRes {
 	
 	public QueryManagerRes(QueryAdd queryAdd, String message) {
 		this.queryAdd = queryAdd;
+		this.message = message;
+	}
+	
+	public QueryManagerRes(QueryDeposit queryDeposit, String message) {
+		this.queryDeposit = queryDeposit;
 		this.message = message;
 	}
 
@@ -78,6 +97,22 @@ public class QueryManagerRes {
 
 	public void setQueryManagerResList(List<QueryManagerRes> queryManagerResList) {
 		this.queryManagerResList = queryManagerResList;
+	}
+
+	public List<QueryDeposit> getQueryDepositList() {
+		return queryDepositList;
+	}
+
+	public void setQueryDepositList(List<QueryDeposit> queryDepositList) {
+		this.queryDepositList = queryDepositList;
+	}
+
+	public List<QueryManager> getQueryManagerList() {
+		return queryManagerList;
+	}
+
+	public void setQueryManagerList(List<QueryManager> queryManagerList) {
+		this.queryManagerList = queryManagerList;
 	}
 
 }

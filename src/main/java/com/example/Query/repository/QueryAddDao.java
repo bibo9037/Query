@@ -12,7 +12,6 @@ import com.example.Query.entity.QueryId;
 public interface QueryAddDao extends JpaRepository<QueryAdd, QueryId>{
 	
 	public List<QueryAdd> findByCaption(String caption);
-	
-	public List<QueryAdd> countByOptions();
 
+	
 }

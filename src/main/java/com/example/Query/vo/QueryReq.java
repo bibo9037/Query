@@ -1,11 +1,12 @@
 package com.example.Query.vo;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class QueryReq {
-	
+
 	@JsonProperty("caption")
 	private String caption; // 問卷名稱
 
@@ -20,30 +21,56 @@ public class QueryReq {
 
 	@JsonProperty("state")
 	private String state; // 狀態
-	
+
 	@JsonProperty("question")
 	private String question; // 問卷題目
-	
-	@JsonProperty("options")
-	private String options; // 問卷選項
-	
-	@JsonProperty("user_name")
-	private String userName;	// 填寫者名稱
-	
+
+	@JsonProperty("opt")
+	private String opt; // 問卷選項
+
+	@JsonProperty("answer")
+	private String ans; // 作答者選項
+
+	@JsonProperty("name")
+	private String name; // 作答者名稱
+
+	@JsonProperty("phone")
+	private String phone; // 作答者電話
+
+	@JsonProperty("mail")
+	private String mail; // 作答者信箱
+
+	@JsonProperty("age")
+	private int age; // 作答者年紀
+
 	@JsonProperty("new_caption")
-	private String newCaption;	// 編輯的新問卷名稱
-	
+	private String newCaption; // 編輯的新問卷名稱
+
 	@JsonProperty("new_content")
 	private String newContent; // 描述內容
-	
+
 	@JsonProperty("new_question")
-	private String newQuestion;	// 編輯的新問卷問題 
+	private String newQuestion; // 編輯的新問卷問題
+
+	@JsonProperty("new_opt")
+	private String newOpt; // 編輯的新問卷選項
+
+	@JsonProperty("finish_time")
+	private LocalDateTime finishTime; // 問卷完成時間
+
+	@JsonProperty("page")
+	private int page;
 	
-	@JsonProperty("new_options")
-	private String newOptions;	// 編輯的新問卷選項
+	@JsonProperty("size")
+	private int size;
 	
 	public QueryReq() {
-		
+
+	}
+	
+	public QueryReq(int page, int size) {
+		this.page = page;
+		this.size = size;
 	}
 
 	public String getCaption() {
@@ -94,20 +121,52 @@ public class QueryReq {
 		this.question = question;
 	}
 
-	public String getOptions() {
-		return options;
+	public String getOpt() {
+		return opt;
 	}
 
-	public void setOptions(String options) {
-		this.options = options;
+	public void setOpt(String opt) {
+		this.opt = opt;
 	}
 
-	public String getUserName() {
-		return userName;
+	public String getAns() {
+		return ans;
 	}
 
-	public void setUserName(String userName) {
-		this.userName = userName;
+	public void setAns(String ans) {
+		this.ans = ans;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public String getMail() {
+		return mail;
+	}
+
+	public void setMail(String mail) {
+		this.mail = mail;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
 	}
 
 	public String getNewCaption() {
@@ -118,6 +177,14 @@ public class QueryReq {
 		this.newCaption = newCaption;
 	}
 
+	public String getNewContent() {
+		return newContent;
+	}
+
+	public void setNewContent(String newContent) {
+		this.newContent = newContent;
+	}
+
 	public String getNewQuestion() {
 		return newQuestion;
 	}
@@ -126,20 +193,36 @@ public class QueryReq {
 		this.newQuestion = newQuestion;
 	}
 
-	public String getNewOptions() {
-		return newOptions;
+	public String getNewOpt() {
+		return newOpt;
 	}
 
-	public void setNewOptions(String newOptions) {
-		this.newOptions = newOptions;
+	public void setNewOpt(String newOpt) {
+		this.newOpt = newOpt;
 	}
 
-	public String getNewContent() {
-		return newContent;
+	public LocalDateTime getFinishTime() {
+		return finishTime;
 	}
 
-	public void setNewContent(String newContent) {
-		this.newContent = newContent;
+	public void setFinishTime(LocalDateTime finishTime) {
+		this.finishTime = finishTime;
 	}
-	
+
+	public int getPage() {
+		return page;
+	}
+
+	public void setPage(int page) {
+		this.page = page;
+	}
+
+	public int getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
+	}
+
 }

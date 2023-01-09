@@ -35,9 +35,11 @@ public class QueryManager {
 		this.caption = caption;
 	}
 
-	public QueryManager(String caption, String content) {
+	public QueryManager(String caption, String content, Date startDate, Date endDate) {
 		this.caption = caption;
 		this.content = content;
+		this.startDate = startDate;
+		this.endDate = endDate;
 	}
 
 	public String getCaption() {
