@@ -131,4 +131,10 @@ public class QueryDeposit {
 		this.finishTime = finishTime;
 	}
 
+	public QueryDeposit(String caption, String question, String ans) {
+		this.caption = caption;
+		this.question = question;
+		this.ans = ans;
+	}
+
 }

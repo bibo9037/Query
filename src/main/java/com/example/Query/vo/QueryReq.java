@@ -55,6 +55,12 @@ public class QueryReq {
 	@JsonProperty("new_opt")
 	private String newOpt; // 編輯的新問卷選項
 
+	@JsonProperty("new_start_date")
+	private Date newStartDate; // 編輯的新問卷選項
+	
+	@JsonProperty("new_end_date")
+	private Date newEndDate; // 編輯的新問卷選項
+	
 	@JsonProperty("finish_time")
 	private LocalDateTime finishTime; // 問卷完成時間
 
@@ -245,6 +251,22 @@ public class QueryReq {
 
 	public void setRequired(boolean required) {
 		this.required = required;
+	}
+
+	public Date getNewStartDate() {
+		return newStartDate;
+	}
+
+	public void setNewStartDate(Date newStartDate) {
+		this.newStartDate = newStartDate;
+	}
+
+	public Date getNewEndDate() {
+		return newEndDate;
+	}
+
+	public void setNewEndDate(Date newEndDate) {
+		this.newEndDate = newEndDate;
 	}
 
 }

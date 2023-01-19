@@ -4,14 +4,18 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import com.example.Query.entity.QueryAdd;
 import com.example.Query.entity.QueryDeposit;
 import com.example.Query.entity.QueryManager;
+import com.example.Query.repository.QueryAddDao;
 import com.example.Query.repository.QueryDepositDao;
 import com.example.Query.repository.QueryManagerDao;
 
@@ -20,9 +24,11 @@ class QueryApplicationTests {
 
 	@Autowired
 	private QueryDepositDao queryDepositDao;
-	
+
 	@Autowired
 	private QueryManagerDao queryManagerDao;
+	@Autowired
+	private QueryAddDao queryAddDao;
 
 	@Test
 	void findByCaptionAndQuestion() {
@@ -66,7 +72,7 @@ class QueryApplicationTests {
 		System.out.println("統計出 : " + "男生為 : " + ans1 + " % , " + "女生為 : " + ans2 + " % , " + "同性為 : " + ans3 + " % , "
 				+ "雙性為 : " + ans4 + " % ");
 	}
-	
+
 	@Test
 	public void findByStartDateBetweenEndDate() throws ParseException {
 //		Date start = new Date(2022,12,01);
@@ -74,10 +80,50 @@ class QueryApplicationTests {
 		Date start = dateFormat1.parse("2022-12-05");
 //		Date end = dateFormat1.parse("2022-12-31");
 		List<QueryManager> queryAddList = queryManagerDao.findByStartDateGreaterThanEqual(start);
-		for(QueryManager q:queryAddList) {
+		for (QueryManager q : queryAddList) {
 			System.out.println(q.getCaption());
 		}
-		
+
 	}
+	@Test
+	// ====kai
+	void count() {
+		List<QueryAdd> q = queryAddDao.findByCaption("性別大調查");
+		List<QueryDeposit> u = queryDepositDao.findByCaption("性別大調查");
+		Map<String,Integer> sMap = new HashMap<>();
+		Map<String,Map<String,Integer>> bMap = new HashMap<>();
+		for (var qItem : q) {
+			int x =0;
+			for (var uItem : u) {
+				
+				if (qItem.getQuestion().equals(uItem.getQuestion())) {
+					String[] str = qItem.getOpt().split(";");
+					{
+						for(var strItem :str) {
+							String ssss=strItem.trim();
+							sMap.put(ssss, 0);
+						}
+						for(var sMapItem :sMap.entrySet()) {
+							if(sMapItem.getKey().equals(uItem.getAns())) {
+								sMap.put(sMapItem.getKey(), x++);
+							}
+						}
+					}
+				}
+			}
+			bMap.put(qItem.getQuestion(), sMap);
+	}
+		
+		
+		Map<String,Integer> sMap2 = new HashMap<>();
+		for(var bI:bMap.entrySet()) {
+			System.out.println(bI.getKey()+" 問題 ");
+			sMap2 = bI.getValue();
+			for(var sI:sMap2.entrySet()) {
+				System.out.println(" 選項 "+sI.getKey()+" 次數: "+sI.getValue());
+			}
+		}
+		
+		}
 
 }

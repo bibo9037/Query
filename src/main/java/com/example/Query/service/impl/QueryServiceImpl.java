@@ -11,11 +11,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.example.Query.entity.QueryAdd;
@@ -27,6 +32,7 @@ import com.example.Query.repository.QueryDepositDao;
 import com.example.Query.repository.QueryManagerDao;
 import com.example.Query.service.ifs.QueryService;
 import com.example.Query.vo.QueryCount;
+import com.example.Query.vo.QueryManagerRes;
 
 @Service
 public class QueryServiceImpl implements QueryService {
@@ -42,7 +48,7 @@ public class QueryServiceImpl implements QueryService {
 
 	// 建立新的問卷
 	@Override
-	public QueryManager creatNewQuery(String caption, String content, Date startDate, Date endDate) {
+	public QueryManager creatNewCaption(String caption, String content, Date startDate, Date endDate) {
 		if (queryManagerDao.existsById(caption)) {
 			return null;
 		}
@@ -53,7 +59,8 @@ public class QueryServiceImpl implements QueryService {
 
 	// 設定新建立問卷的題目
 	@Override
-	public QueryAdd creatQuestion(String caption, String question, String opt, boolean selectedOption, boolean required) {
+	public QueryAdd creatQuestion(String caption, String question, String opt, boolean selectedOption,
+			boolean required) {
 		QueryId queryId = new QueryId(caption, question);
 
 		if (queryManagerDao.findByCaption(caption).isEmpty()) {
@@ -72,7 +79,7 @@ public class QueryServiceImpl implements QueryService {
 	// 編輯問卷名稱
 	@Override
 	public QueryManager reviseCaption(String caption, String newCaption, String content, String newContent,
-			String question) {
+			Date startDate, Date newStartDate, Date endDate, Date newEndDate) {
 		Optional<QueryManager> queryManagerOp = queryManagerDao.findById(caption);
 		if (!queryManagerOp.isPresent()) {
 			return null;
@@ -82,6 +89,14 @@ public class QueryServiceImpl implements QueryService {
 
 		if (StringUtils.hasText(newContent)) {
 			queryManager.setContent(newContent);
+		}
+
+		if (newStartDate != null) {
+			queryManager.setStartDate(newStartDate);
+		}
+
+		if (newEndDate != null) {
+			queryManager.setEndDate(newEndDate);
 		}
 
 		if (StringUtils.hasText(newCaption)) {
@@ -100,7 +115,8 @@ public class QueryServiceImpl implements QueryService {
 
 	// 編輯問卷問題跟選項
 	@Override
-	public QueryAdd reviseQuestions(String caption, String question, String newQuestion, String opt, String newOpt) {
+	public QueryAdd reviseQuestions(String caption, String question, String newQuestion, String opt, String newOpt,
+			boolean selectedOption, boolean required) {
 		QueryId queryId = new QueryId(caption, question);
 		Optional<QueryAdd> queryAddOp = queryAddDao.findById(queryId);
 
@@ -118,12 +134,15 @@ public class QueryServiceImpl implements QueryService {
 		if (StringUtils.hasText(newOpt)) {
 			queryAdd.setOpt(newOpt);
 		}
+		queryAdd.setRequired(required);
+		queryAdd.setSelectedOption(selectedOption);
 		return queryAddDao.save(queryAdd);
 	}
 
 	// 刪除問卷(包含作答者資料一併刪除)
 	@Override
-	public QueryManager deleteQuery(String caption, String question) {
+	@Transactional
+	public QueryManager deleteCaption(String caption) {
 		Optional<QueryManager> queryManagerOp = queryManagerDao.findById(caption);
 
 		if (!queryManagerOp.isPresent()) {
@@ -144,8 +163,28 @@ public class QueryServiceImpl implements QueryService {
 		return queryManager;
 	}
 
+	// 刪除問卷題目
 	@Override
-	public List<QueryManager> showAllQuery() {
+	public QueryAdd deleteQuestion(String caption, String question) {
+		QueryId queryId = new QueryId(caption, question);
+		queryAddDao.deleteById(queryId);
+		return null;
+	}
+
+	@Override
+	public QueryManagerRes findByCaption(String caption) {
+		QueryManager queryManager = queryManagerDao.findById(caption).get();
+		List<QueryAdd> queryAddList = queryAddDao.findByCaption(caption);
+
+		if (CollectionUtils.isEmpty(queryAddList)) {
+			return null;
+		}
+
+		return new QueryManagerRes(queryManager, queryAddList);
+	}
+
+	@Override
+	public List<QueryManager> showAllCaption() {
 		return queryManagerDao.findAll();
 	}
 
@@ -163,10 +202,15 @@ public class QueryServiceImpl implements QueryService {
 
 		return queryDepositDao.save(queryDeposit);
 	}
-	
+
 	@Override
-	public List<QueryDeposit> showAllUserInfo() {
-		return queryDepositDao.findAll();
+	public QueryManagerRes showUserInfoByCaption(String caption) {
+		QueryManagerRes queryManagerRes = new QueryManagerRes();
+		List<QueryAdd> queryAddList = queryAddDao.findByCaption(caption);
+		List<QueryDeposit> queryDepositList = queryDepositDao.findByCaption(caption);
+		queryManagerRes.setQueryAddList(queryAddList);
+		queryManagerRes.setQueryDepositList(queryDepositList);
+		return queryManagerRes;
 	}
 
 	// 分頁查詢(由新到舊排序)
@@ -185,37 +229,65 @@ public class QueryServiceImpl implements QueryService {
 
 	// 已作答問卷選項統計
 	@Override
-	public List<QueryCount> countByAns(String question) {
-		List<QueryDeposit> queryDepositList = queryDepositDao.findAllByQuestion(question);
-		
-		Map<String, Integer> count = new HashMap<>();
-		
-		List<String> questionList = new ArrayList<>();
-		
+	public List<QueryCount> countByAns(String caption) {
+
+		List<QueryDeposit> qDList = queryDepositDao.findByCaption(caption);
 		List<QueryCount> queryCountList = new ArrayList<>();
-		
-		int totle = 0;
-		
-		for( QueryDeposit queryDeposit : queryDepositList) {
-			questionList.add(queryDeposit.getAns());
+
+		Map<String, Integer> count = new HashMap<>();
+
+		List<String> answerList = new ArrayList<>();
+		List<QueryAdd> queryAddList = queryAddDao.findByCaption(caption);
+
+		// 問卷題目作答分類
+		for (QueryDeposit qDeposit : qDList) {
+			String qDString = qDeposit.getAns();
+			String[] qDStringList = qDString.split(";");
+			for (String str : qDStringList) {
+				answerList.add(str);
+			}
 		}
 
-		for(String item : questionList) {
-			count.put(item, count.getOrDefault(item, 0) +1);
-			totle++;
+		// 放題目總數的Map 例:(你的性向,8) (aaaaa,7)
+		Map<String, Integer> questionMap = new HashMap<>();
+		for (QueryAdd queryAdd : queryAddList) {
+
+			queryAdd.getQuestion();
+			int x = 0;
+			for (String item : answerList) {
+
+				if (queryAdd.getOpt().contains(item)) {
+					x++;
+					questionMap.put(queryAdd.getQuestion(), x);
+				}
+			}
 		}
-		
-		for(Map.Entry<String, Integer> entry : count.entrySet()) {
-			
-			String answer = entry.getKey();
+
+		for (String item : answerList) {
+			count.put(item, count.getOrDefault(item, 0) + 1);
+		}
+
+		// 放題目總數的Map 例:(你的性向,8) (aaaaa,7)
+		for (Map.Entry<String, Integer> entry : questionMap.entrySet()) {
+
+			String question = entry.getKey();
 			int acount = entry.getValue();
-			
-			int percentage = (int) (acount * 100.0 / totle);
-			
-			QueryCount queryCount = new QueryCount(answer, totle, acount, percentage);
-			queryCountList.add(queryCount);
+
+			// 放選項總數的Map 例:(雙性戀,3) (同性戀,1)
+			for (Map.Entry<String, Integer> option : count.entrySet()) {
+				for (QueryAdd item : queryAddList) {
+
+					if (item.getQuestion().equals(question) && item.getOpt().contains(option.getKey())) {
+
+						double percentage = Math.round((option.getValue() * 1000.0 / acount)) / 10.0;
+
+						QueryCount queryCount = new QueryCount(item.getQuestion(), option.getKey(), acount,
+								option.getValue(), percentage);
+						queryCountList.add(queryCount);
+					}
+				}
+			}
 		}
-		
 		return queryCountList;
 	}
 
@@ -227,11 +299,6 @@ public class QueryServiceImpl implements QueryService {
 		// 不輸入任何值，全部顯示
 		if (!StringUtils.hasText(caption) && startDate == null && endDate == null) {
 			return queryManagerDao.findAll();
-		}
-
-		// 輸入所有值，全部顯示
-		else if (StringUtils.hasText(caption) && startDate != null && endDate != null) {
-			return queryManagerDao.findByCaptionContainingAndStartDateBetween(caption, startDate, endDate);
 		}
 
 		// 問卷+開始
@@ -267,11 +334,7 @@ public class QueryServiceImpl implements QueryService {
 		else if (StringUtils.hasText(caption) && startDate == null && endDate == null) {
 			return queryManagerDao.findByCaptionContaining(caption);
 		}
-
-//		return queryManagerDao.findByCaptionContainingAndStartDateBetween(caption, startDate, endDate);
-		return null;
+		// 輸入所有值，全部顯示
+		return queryManagerDao.findByCaptionContainingAndStartDateBetween(caption, startDate, endDate);
 	}
-
-
-
 }

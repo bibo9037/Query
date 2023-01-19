@@ -30,8 +30,22 @@ public class QueryManagerRes {
 	
 	private List<QueryCount> queryCountList;
 	
+	private String state;
+	
+	private QueryCount queryCount;
+	
 	public QueryManagerRes() {
 
+	}
+
+	public QueryManagerRes(List<QueryDeposit> queryDepositList, List<QueryCount> queryCountList) {
+		this.queryDepositList = queryDepositList;
+		this.queryCountList = queryCountList;
+	}
+
+	public QueryManagerRes(QueryManager queryManager, List<QueryAdd> queryAddList) {
+		this.queryManager = queryManager;
+		this.queryAddList = queryAddList;
 	}
 
 	public QueryManagerRes(List<QueryDeposit> queryDepositList, String message) {
@@ -133,6 +147,22 @@ public class QueryManagerRes {
 
 	public void setQueryCountList(List<QueryCount> queryCountList) {
 		this.queryCountList = queryCountList;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public QueryCount getQueryCount() {
+		return queryCount;
+	}
+
+	public void setQueryCount(QueryCount queryCount) {
+		this.queryCount = queryCount;
 	}
 
 }

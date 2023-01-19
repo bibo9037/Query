@@ -26,15 +26,15 @@ public class QueryController {
 	@Autowired
 	private QueryService queryService;
 
-	@PostMapping(value = "/api/creatNewQuery")
-	public QueryManagerRes creatNewQuery(@RequestBody QueryReq req) {
+	@PostMapping(value = "/api/creatNewCaption")
+	public QueryManagerRes creatNewCaption(@RequestBody QueryReq req) {
 
 		// 判斷問卷題目與描述是否為空
 		if (!StringUtils.hasText(req.getCaption()) || !StringUtils.hasText(req.getContent())) {
 			return new QueryManagerRes(QueryRtnCode.CAPTION_EMPTY.getMessage());
 		}
 
-		QueryManager queryManager = queryService.creatNewQuery(req.getCaption(), req.getContent(), req.getStartDate(), req.getEndDate());
+		QueryManager queryManager = queryService.creatNewCaption(req.getCaption(), req.getContent(), req.getStartDate(), req.getEndDate());
 
 		if (queryManager == null) {
 			return new QueryManagerRes(QueryRtnCode.EXISTED.getMessage());
@@ -47,7 +47,7 @@ public class QueryController {
 	@PostMapping(value = "/api/creatQuestion")
 	public QueryManagerRes creatQuestion(@RequestBody QueryReq req) {
 		// 判斷問卷題目是否為空
-		if (!StringUtils.hasText(req.getCaption())) {
+		if (!StringUtils.hasText(req.getCaption()) || !StringUtils.hasText(req.getOpt())) {
 			return new QueryManagerRes(QueryRtnCode.CAPTION_EMPTY.getMessage());
 		}
 
@@ -73,7 +73,7 @@ public class QueryController {
 		}
 
 		QueryManager queryManager = queryService.reviseCaption(req.getCaption(), req.getNewCaption(), req.getContent(),
-				req.getNewContent(), req.getQuestion());
+				req.getNewContent(), req.getStartDate(), req.getNewStartDate(), req.getEndDate(), req.getNewEndDate());
 		if (queryManager == null) {
 			return new QueryManagerRes(QueryRtnCode.DELETE_NOT_EXIST.getMessage());
 		}
@@ -89,7 +89,7 @@ public class QueryController {
 		}
 
 		QueryAdd queryAdd = queryService.reviseQuestions(req.getCaption(), req.getQuestion(), req.getNewQuestion(),
-				req.getOpt(), req.getNewOpt());
+				req.getOpt(), req.getNewOpt(),  req.isSelectedOption(), req.isRequired());
 		if (queryAdd == null) {
 			return new QueryManagerRes(QueryRtnCode.DELETE_NOT_EXIST.getMessage());
 		}
@@ -98,13 +98,13 @@ public class QueryController {
 		return queryManagerRes;
 	}
 
-	@PostMapping(value = "/api/deleteQuery")
-	public QueryManagerRes deleteQuery(@RequestBody QueryReq req) {
+	@PostMapping(value = "/api/deleteCaption")
+	public QueryManagerRes deleteCaption(@RequestBody QueryReq req) {
 		if (!StringUtils.hasText(req.getCaption())) {
 			return new QueryManagerRes(QueryRtnCode.DELETE_CAPTION_EMPTY.getMessage());
 		}
 
-		QueryManager queryManager = queryService.deleteQuery(req.getCaption(), req.getContent());
+		QueryManager queryManager = queryService.deleteCaption(req.getCaption());
 
 		if (queryManager == null) {
 			return new QueryManagerRes(QueryRtnCode.DELETE_NOT_EXIST.getMessage());
@@ -115,9 +115,24 @@ public class QueryController {
 		return queryManagerRes;
 	}
 	
-	@PostMapping(value = "/api/showAllQuery")
-	public QueryManagerRes showAllQuery(){
-		List<QueryManager> queryManagerList = queryService.showAllQuery();
+	@PostMapping(value = "/api/deleteQuestion")
+	public QueryManagerRes deleteQuestion(@RequestBody QueryReq req) {
+		QueryAdd queryAdd = queryService.deleteQuestion(req.getCaption(), req.getQuestion());
+		
+		QueryManagerRes queryManagerRes = new QueryManagerRes(queryAdd,QueryRtnCode.DELETE_SUCCESSFUL.getMessage());
+		
+		return queryManagerRes;
+	}
+	
+	
+	@PostMapping(value = "/api/findByCaption")
+	public QueryManagerRes findByCaption(@RequestBody QueryReq req) {
+		return queryService.findByCaption(req.getCaption());
+	}
+	
+	@PostMapping(value = "/api/showAllCaption")
+	public QueryManagerRes showAllCaption(){
+		List<QueryManager> queryManagerList = queryService.showAllCaption();
 
 		QueryManagerRes queryManagerRes = new QueryManagerRes();
 		queryManagerRes.setMessage(QueryRtnCode.SUCCESSFUL.getMessage());
@@ -142,13 +157,10 @@ public class QueryController {
 		return queryManagerRes;
 	}
 	
-	@PostMapping(value = "/api/showAllUserInfo")
-	public QueryManagerRes showAllUserInfo(){
-		List<QueryDeposit> queryDepositList = queryService.showAllUserInfo();
-		
-		QueryManagerRes queryManagerRes = new QueryManagerRes();
+	@PostMapping(value = "/api/showUserInfoByCaption")
+	public QueryManagerRes showUserInfoByCaption(@RequestBody QueryReq req){
+		QueryManagerRes queryManagerRes = queryService.showUserInfoByCaption(req.getCaption());
 		queryManagerRes.setMessage(QueryRtnCode.SUCCESSFUL.getMessage());
-		queryManagerRes.setQueryDepositList(queryDepositList);
 		return queryManagerRes;
 	}
 
@@ -168,7 +180,7 @@ public class QueryController {
 	
 	@PostMapping(value = "/api/countByAns")
 	public QueryManagerRes countByAns(@RequestBody QueryReq req){
-		 List<QueryCount> queryCountList = queryService.countByAns(req.getQuestion());
+		 List<QueryCount> queryCountList = queryService.countByAns(req.getCaption());
 				
 		QueryManagerRes queryManagerRes = new QueryManagerRes();
 		queryManagerRes.setMessage(QueryRtnCode.SEARCH_SUCCESSFUL.getMessage());
@@ -181,8 +193,13 @@ public class QueryController {
 	
 	@PostMapping(value = "/api/findByCaptionContaining")
 	public QueryManagerRes findByCaptionContaining(@RequestBody QueryReq req) throws ParseException {
-		List<QueryManager> queryManagerList = queryService.findByCaptionContaining(req.getCaption(), req.getStartDate(), req.getEndDate());
 
+		if(req.getStartDate().after(req.getEndDate())) {
+			return new QueryManagerRes("開始日期不得大於結束日期!");
+		}
+		
+		List<QueryManager> queryManagerList = queryService.findByCaptionContaining(req.getCaption(), req.getStartDate(), req.getEndDate());
+		
 		if (queryManagerList.isEmpty()) {
 			return new QueryManagerRes(QueryRtnCode.SEARCH_NOT_EXIST.getMessage());
 		}

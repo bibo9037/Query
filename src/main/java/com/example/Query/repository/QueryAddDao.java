@@ -11,7 +11,5 @@ import com.example.Query.entity.QueryId;
 @Repository
 public interface QueryAddDao extends JpaRepository<QueryAdd, QueryId>{
 	
-	public List<QueryAdd> findByCaption(String caption);
-
-	
+	public List<QueryAdd> findByCaption(String caption);	
 }
